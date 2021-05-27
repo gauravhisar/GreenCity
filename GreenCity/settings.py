@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'Home.apps.HomeConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -77,7 +78,7 @@ WSGI_APPLICATION = 'GreenCity.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'first_try.db',
+        'NAME': BASE_DIR / 'greencity.db',
     }
 }
 
