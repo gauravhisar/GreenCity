@@ -54,12 +54,15 @@ class Project(models.Model):
 class Plot(models.Model):
     id = models.AutoField(primary_key=True)
     plot_no = models.TextField(unique=True, null=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE,related_name='plots')
     area = models.FloatField(blank=True, null=True)
     rate = models.FloatField(blank=True, null=True)
 
     def __str__(self):
-        return self.plot_no + self.project_id.name
+        return self.plot_no + " ("+self.project.name + ")"
+
+    # def plots_of_given_project_id(self,project_id):  # remember this
+    #     return Project.objects.get(id = project_id).plots.all()
 
     class Meta:
         managed = True
@@ -68,12 +71,14 @@ class Plot(models.Model):
 
 class Deal(models.Model):
     id = models.AutoField(primary_key=True)
-    plot = models.ForeignKey(Plot,on_delete = models.DO_NOTHING,null = True )
+    plot = models.OneToOneField(Plot,on_delete = models.DO_NOTHING,null = True )
     customer = models.ForeignKey(Customer,on_delete = models.DO_NOTHING,null = True)
     rebate = models.FloatField(blank=True, null=True)
     dealer = models.ForeignKey(Dealer,null=True,on_delete = models.DO_NOTHING)
     commission = models.FloatField(blank=True, null=True)
 
+    def __str__(self):
+        return self.plot.plot_no + " (" + self.plot.project.name + ")"
     class Meta:
         managed = True
         db_table = 'Deal'
@@ -84,6 +89,9 @@ class Due(models.Model):
     deal = models.ForeignKey(Deal,on_delete= models.CASCADE)
     due_date = models.DateField(blank=True, null=True)
     payable_amount = models.FloatField(blank=True, null=True)
+
+    def __str__(self):
+        return self.deal.plot.plot_no + " (" + self.deal.plot.project.name + ") -- " +  self.id
 
     class Meta:
         managed = True
@@ -97,6 +105,9 @@ class Payment(models.Model):
     amount_paid = models.FloatField(blank=True, null=True)
     interest = models.FloatField(blank=True, null=True)
 
+    def __str__(self):
+        return self.deal.plot.plot_no + " (" + self.deal.plot.project.name + ") -- " +  self.id
+        
     class Meta:
         managed = True
         db_table = 'Payment'

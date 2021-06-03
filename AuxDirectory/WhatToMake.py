@@ -36,3 +36,6 @@ findBalance(1)
 
 conn.commit()
 conn.close()
+
+
+# project page same as django admin project page
