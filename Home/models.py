@@ -8,6 +8,7 @@
 from django.db import models
 
 
+
 class Dealer(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.TextField()
@@ -61,20 +62,18 @@ class Plot(models.Model):
     def __str__(self):
         return self.plot_no + " ("+self.project.name + ")"
 
-    # def plots_of_given_project_id(self,project_id):  # remember this
-    #     return Project.objects.get(id = project_id).plots.all()
-
     class Meta:
         managed = True
         db_table = 'Plot'
+        unique_together = ('plot_no','project')
 
 
 class Deal(models.Model):
     id = models.AutoField(primary_key=True)
-    plot = models.OneToOneField(Plot,on_delete = models.DO_NOTHING,null = True )
-    customer = models.ForeignKey(Customer,on_delete = models.DO_NOTHING,null = True)
+    plot = models.OneToOneField(Plot,on_delete = models.DO_NOTHING,null = True,related_name =  'deal')
+    customer = models.ForeignKey(Customer,on_delete = models.DO_NOTHING,null = True, related_name = 'deal')
     rebate = models.FloatField(blank=True, null=True)
-    dealer = models.ForeignKey(Dealer,null=True,on_delete = models.DO_NOTHING)
+    dealer = models.ForeignKey(Dealer,null=True,on_delete = models.DO_NOTHING, related_name = 'deal')
     commission = models.FloatField(blank=True, null=True)
 
     def __str__(self):
