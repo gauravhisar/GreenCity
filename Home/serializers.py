@@ -4,6 +4,7 @@ import logging
 
 
 logger = logging.getLogger(__name__)
+logger.info(__name__)
 
 
 class ProjectSerializer(serializers.ModelSerializer):  # used by list view only
@@ -46,7 +47,7 @@ class DealDetailSerializer(serializers.ModelSerializer):
     # will also be used to update, delete and retrieve
     customer = CustomerSerializer(read_only=True)
     dealer = DealerSerializer(read_only=True)
-    balance = serializers.SerializerMethodField('get_balance')
+    balance = serializers.SerializerMethodField(read_only = True) # it will automatically search for get_balance function
 
     class Meta:
         model = Deal
@@ -62,22 +63,19 @@ class DealDetailSerializer(serializers.ModelSerializer):
 
 # detail of plot with deal corresponding to it
 class PlotDetailSerializer(serializers.ModelSerializer):
-    amount = serializers.SerializerMethodField('get_amount')
-    # here, if the variable name is another than deal, we can add source = deal(related_name) otherwise it will consider source  = variablename only
+    amount = serializers.SerializerMethodField(read_only=True)
     deal = DealDetailSerializer(read_only=True)
 
     class Meta:
         model = Plot
         fields = ('id', 'plot_no', 'project', 'area', 'rate', 'deal', 'amount')
 
-    def get_amount(self, id,**kwargs):
-        logger.info("Amount Calculated for plot : " + id.plot_no )
-        return id.rate * id.area
+    def get_amount(self, instance):
+        logger.info("Amount Calculated for plot : " + instance.plot_no )
+        return instance.rate*instance.area
 
 
-# used by detail view only
 class ProjectDetailSerializer(serializers.ModelSerializer):
-    # plots with all their deals
     plots = PlotDetailSerializer(many=True, read_only=True)
 
     class Meta:
