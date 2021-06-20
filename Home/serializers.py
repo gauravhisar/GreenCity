@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from Home.models import Project, Plot, Customer, Dealer, Deal
+from django.db.models import Sum
+from datetime import date
 import logging
+from Home.models import Project, Plot, Customer, Dealer, Deal,Payment,Due,CommissionPayment
 
 
 logger = logging.getLogger(__name__)
@@ -10,24 +12,7 @@ logger.info(__name__)
 class ProjectSerializer(serializers.ModelSerializer):  # used by list view only
     class Meta:
         model = Project
-        fields = ('id', 'name', 'address', 'total_area', 'total_plots')
-
-
-class DealSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Deal
-        fields = ('id', 'plot', 'customer', 'rebate', 'dealer', 'commission')
-
-    def __str__(self):
-        return 'Deal on PlotNo: ' + str(self.plot.plot_no) + 'of Project:' + str(self.plot.project.name)
-
-
-# listing all the plots without listing deal corresponding to it
-class PlotSerializer(serializers.ModelSerializer):
-    # will be used only when creating new plots
-    class Meta:
-        model = Plot
-        fields = ('id', 'plot_no', 'project', 'area', 'rate')
+        fields = ('id', 'name', 'address', 'total_plots', 'total_area','plots_sold','area_sold')
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -42,46 +27,87 @@ class DealerSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'contact_no', 'other_info')
 
 
-class DealDetailSerializer(serializers.ModelSerializer):
-    # used in PlotDetailSerializer below
-    # will also be used to update, delete and retrieve
-    customer = CustomerSerializer(read_only=True)
-    dealer = DealerSerializer(read_only=True)
-    balance = serializers.SerializerMethodField(read_only = True) # it will automatically search for get_balance function
-
+class DealSerializer(serializers.ModelSerializer): 
+    "Serializer for both Detail and List Views  "
+    dealer = DealerSerializer(read_only = True)
+    customer = CustomerSerializer(read_only = True)
     class Meta:
         model = Deal
-        fields = ('id', 'plot', 'customer', 'rebate',
-                  'dealer', 'commission', 'balance')
-
-    def get_balance(self, instance):
-        return 100  # NEED TO CHANGE
+        fields = ('id', 'plot_id','customer','balance','penalty','dealer')
 
     def __str__(self):
         return 'Deal on PlotNo: ' + str(self.plot.plot_no) + 'of Project:' + str(self.plot.project.name)
 
+class PlotSerializer(serializers.ModelSerializer):
+    deal = DealSerializer(read_only = True)
+    class Meta:
+        model = Plot
+        fields = ('id', 'plot_no', 'project_id', 'project_name','area', 'rate', 'amount', 'deal')
+
+    def create(self, validated_data):
+        plot = Plot(
+            id = validated_data.get('id'),
+            project_id = self.context['view'].kwargs['project_id'],
+            plot_no = validated_data.get('plot_no'),
+            area = validated_data.get('area'),
+            rate = validated_data.get('rate')
+        )
+        plot.save()
+        return plot
+        
+        
+
+class DueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Due
+        fields = ('id','deal_id','due_date','payable_amount')
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    ''''''
+    class Meta:
+        model = Payment
+        fields = ('id','deal_id','date','interest_given','rebate','net_amount_paid')
+
+
+class CommissionPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommissionPayment
+        fields = ('id','deal_id','date','amount')
+
+
+
+class DealDetailSerializer(serializers.ModelSerializer):
+    dealer = DealerSerializer(read_only = True)
+    customer = CustomerSerializer(read_only = True)
+    payments = PaymentSerializer(many = True,read_only = True)
+    commission_payments = CommissionPaymentSerializer(many=True,read_only = True)
+    dues = DueSerializer(many=True,read_only = True)
+
+    class Meta:
+        model = Deal
+        fields = ('id', 'plot_id', 'customer', 'dues','payments','penalty','dealer', 'commission_payments',
+                   'balance')
+    
+    def __str__(self):
+        return 'Deal on PlotNo: ' + str(self.plot.plot_no) + 'of Project:' + str(self.plot.project.name)
 
 # detail of plot with deal corresponding to it
 class PlotDetailSerializer(serializers.ModelSerializer):
-    amount = serializers.SerializerMethodField(read_only=True)
     deal = DealDetailSerializer(read_only=True)
 
     class Meta:
         model = Plot
-        fields = ('id', 'plot_no', 'project', 'area', 'rate', 'deal', 'amount')
-
-    def get_amount(self, instance):
-        logger.info("Amount Calculated for plot : " + instance.plot_no )
-        return instance.rate*instance.area
+        fields = ('id', 'plot_no', 'project_id', 'project_name','area', 'rate', 'amount','deal')
 
 
 class ProjectDetailSerializer(serializers.ModelSerializer):
-    plots = PlotDetailSerializer(many=True, read_only=True)
+    plots = PlotSerializer(many=True, read_only=True)
 
     class Meta:
         model = Project
         fields = ('id', 'name', 'address',
-                  'total_area', 'total_plots', 'plots')
+                  'total_plots', 'total_area', 'plots_sold','area_sold','plots')
 
 
 class CustomerDetailSerializer(serializers.ModelSerializer):

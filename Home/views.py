@@ -1,12 +1,13 @@
 from django.core.files.base import File
+from django.db.models import query
 from django.http import HttpResponse
 import logging
 
 from rest_framework import generics, viewsets, status
 from rest_framework.response import Response
 from Home import serializers
-from Home.models import Project, Customer, Dealer, Plot, Deal
-from Home.serializers import CustomerSerializer, DealerSerializer, PlotSerializer, DealSerializer, DealsFileUploadSerializer
+from Home.models import Project, Customer, Dealer, Plot, Deal,Payment,Due,CommissionPayment
+# from Home.serializers import CustomerSerializer, DealerSerializer, PlotSerializer, DealSerializer, DealsFileUploadSerializer
 # Create your views here.
 
 
@@ -18,12 +19,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     lookup_field = 'id'
     serializer_classes = {
+        'retrieve': serializers.ProjectDetailSerializer,
         'list': serializers.ProjectSerializer,
         'create': serializers.ProjectSerializer,
-        'retrieve': serializers.ProjectDetailSerializer,
-        'delete': serializers.ProjectDetailSerializer,
-        'update': serializers.ProjectDetailSerializer,
-        'partial_update': serializers.ProjectDetailSerializer,
+        'delete': serializers.ProjectSerializer,
+        'update': serializers.ProjectSerializer,
+        'partial_update': serializers.ProjectSerializer,
     }
 
     def get_serializer_class(self):
@@ -31,19 +32,32 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 
 class PlotViewSet(viewsets.ModelViewSet):
-    queryset = Plot.objects.all()  # this queryset will be seen in the view
-    serializer_class = PlotSerializer
+    # queryset = Plot.objects.all()  # this queryset will be seen in the view
+    serializer_classes = {
+        'retrieve': serializers.PlotDetailSerializer,
+        'list': serializers.PlotSerializer,
+        'create': serializers.PlotSerializer,
+        'delete': serializers.PlotSerializer,
+        'update': serializers.PlotSerializer,
+        'partial_update': serializers.PlotSerializer,
+    }
+
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, serializers.PlotSerializer)
+
+    def get_queryset(self):
+        return Plot.objects.filter(project_id = self.kwargs['project_id'])
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_classes = {
+        'retrieve': serializers.CustomerDetailSerializer,
         'list': serializers.CustomerSerializer,
         'create': serializers.CustomerSerializer,
-        'retrieve': serializers.CustomerDetailSerializer,
-        'delete': serializers.CustomerDetailSerializer,
-        'update': serializers.CustomerDetailSerializer,
-        'partial_update': serializers.CustomerDetailSerializer,
+        'delete': serializers.CustomerSerializer,
+        'update': serializers.CustomerSerializer,
+        'partial_update': serializers.CustomerSerializer,
     }
 
     def get_serializer_class(self):
@@ -53,12 +67,12 @@ class CustomerViewSet(viewsets.ModelViewSet):
 class DealerViewSet(viewsets.ModelViewSet):
     queryset = Dealer.objects.all()
     serializer_classes = {
+        'retrieve': serializers.DealerDetailSerializer,
         'list': serializers.DealerSerializer,
         'create': serializers.DealerSerializer,
-        'retrieve': serializers.DealerDetailSerializer,
-        'delete': serializers.DealerDetailSerializer,
-        'update': serializers.DealerDetailSerializer,
-        'partial_update': serializers.DealerDetailSerializer,
+        'delete': serializers.DealerSerializer,
+        'update': serializers.DealerSerializer,
+        'partial_update': serializers.DealerSerializer,
     }
 
     def get_serializer_class(self):
@@ -66,13 +80,45 @@ class DealerViewSet(viewsets.ModelViewSet):
 
 
 class DealViewSet(viewsets.ModelViewSet):
-    queryset = Deal.objects.all()
-    serializer_class = DealSerializer
+    serializer_classes = {
+        'retrieve': serializers.DealDetailSerializer,
+        'list': serializers.DealSerializer,
+        'create': serializers.DealSerializer,
+        'delete': serializers.DealSerializer,
+        'update': serializers.DealSerializer,
+        'partial_update': serializers.DealSerializer,
+    }
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, serializers.DealSerializer)
+
+    def get_queryset(self):
+        return Deal.objects.filter(plot__project_id = self.kwargs['project_id'])
+
+class DueViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.DueSerializer
+
+    def get_queryset(self):
+        return Due.objects.filter(deal_id = self.kwargs['deal_id'])
+
+
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.PaymentSerializer
+
+    def get_queryset(self):
+        return Payment.objects.filter(deal_id = self.kwargs['deal_id'])
+
+
+class CommissionPaymentViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.CommissionPaymentSerializer
+
+    def get_queryset(self):
+        return CommissionPayment.objects.filter(deal_id = self.kwargs['deal_id'])
 
 
 class DealsFileUploadViewSet(viewsets.ViewSet):
     # parser_classes = [parsers.FileUploadParser]
-    serializer_class = DealsFileUploadSerializer
+    serializer_class = serializers.DealsFileUploadSerializer
 
     def list(self, request):
         return Response("GET API")

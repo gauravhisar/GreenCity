@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-6byh-guufxy!v2(6-k3*4l2x*bh0)^2hdeg!rex7oite4c%u4x
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["192.168.1.5",'localhost','127.0.0.1']
 
 
 LOGGING = {
@@ -69,6 +69,7 @@ LOGGING = {
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'rest_framework',
     'drf_yasg',
     'Home.apps.HomeConfig',
@@ -81,6 +82,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -90,6 +92,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_WHITELIST =  list(map(lambda x: "http://" + x + ":3000",ALLOWED_HOSTS)) + list(map(lambda x: "http://" + x + ":5500",ALLOWED_HOSTS)) 
+# print(CORS_ORIGIN_WHITELIST)
 ROOT_URLCONF = 'GreenCity.urls'
 
 TEMPLATES = [
