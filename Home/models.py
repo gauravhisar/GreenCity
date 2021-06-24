@@ -75,7 +75,7 @@ class Plot(models.Model):
     rate = models.FloatField(blank=True, null=True)
 
     def __str__(self):
-        return self.plot_no + " ("+self.project.name + ")"
+        return str(self.plot_no) + " ("+self.project.name + ")"
 
     class Meta:
         managed = True
@@ -85,7 +85,9 @@ class Plot(models.Model):
     
     @property
     def amount(self):
-        return self.area*self.rate
+        if (self.area != None and self.rate !=None):
+            return self.area*self.rate
+        return None
 
     @property
     def project_name(self):

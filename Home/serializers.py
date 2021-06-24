@@ -29,12 +29,17 @@ class DealerSerializer(serializers.ModelSerializer):
 
 class DealSerializer(serializers.ModelSerializer): 
     "Serializer for both Detail and List Views  "
-    dealer = DealerSerializer(read_only = True)
+    plot_id = serializers.PrimaryKeyRelatedField(queryset = Plot.objects.all(),source = "plot")
+    customer_id = serializers.PrimaryKeyRelatedField(queryset = Customer.objects.all(),write_only = True, source = "customer")
+    dealer_id = serializers.PrimaryKeyRelatedField(queryset = Dealer.objects.all(),write_only = True, source = "dealer")
     customer = CustomerSerializer(read_only = True)
+    dealer = DealerSerializer(read_only = True)
+    
     class Meta:
         model = Deal
-        fields = ('id', 'plot_id','customer','balance','penalty','dealer')
+        fields = ('id','plot_id','customer_id','dealer_id','customer','balance','penalty','dealer')
 
+    # def get_plot_id(self,data)
     def __str__(self):
         return 'Deal on PlotNo: ' + str(self.plot.plot_no) + 'of Project:' + str(self.plot.project.name)
 
