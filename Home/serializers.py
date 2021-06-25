@@ -16,12 +16,14 @@ class ProjectSerializer(serializers.ModelSerializer):  # used by list view only
 
 
 class CustomerSerializer(serializers.ModelSerializer):
+    contact_no = serializers.CharField(max_length=10, source = "contact")
     class Meta:
         model = Customer
         fields = ('id', 'name', 'contact_no', 'other_info')
 
 
 class DealerSerializer(serializers.ModelSerializer):
+    contact_no = serializers.CharField(max_length=10, source = "contact")
     class Meta:
         model = Dealer
         fields = ('id', 'name', 'contact_no', 'other_info')
@@ -49,9 +51,9 @@ class PlotSerializer(serializers.ModelSerializer):
         model = Plot
         fields = ('id', 'plot_no', 'project_id', 'project_name','area', 'rate', 'amount', 'deal')
 
-    def create(self, validated_data):
+    def create(self, validated_data): # now there is no need for client to pass project_id in the request
         plot = Plot(
-            id = validated_data.get('id'),
+            # id = validated_data.get('id'),
             project_id = self.context['view'].kwargs['project_id'],
             plot_no = validated_data.get('plot_no'),
             area = validated_data.get('area'),
@@ -63,9 +65,19 @@ class PlotSerializer(serializers.ModelSerializer):
         
 
 class DueSerializer(serializers.ModelSerializer):
+    due_date = serializers.DateField(input_formats = ["%d-%m-%Y", 'iso-8601'])
     class Meta:
         model = Due
         fields = ('id','deal_id','due_date','payable_amount')
+    
+    def create(self, validated_data): # now there is no need for client to pass project_id in the request
+        due = Due(
+            deal_id = self.context['view'].kwargs.get('deal_id'),
+            due_date = validated_data.get('due_date'),
+            payable_amount = validated_data.get('payable_amount')
+        )
+        due.save()
+        return due
 
 
 class PaymentSerializer(serializers.ModelSerializer):

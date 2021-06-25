@@ -27,6 +27,18 @@ class Dealer(models.Model):
         managed = True
         db_table = 'Dealer'
 
+    @property
+    def contact(self):
+        if self.contact_no == None:
+            return ""
+        return self.contact_no
+
+    @contact.setter
+    def contact(self, contact):
+        if contact == None or len(contact) == 0:
+            self.contact_no = None
+        self.contact_no = contact
+
 
 class Customer(models.Model):
     id = models.AutoField(primary_key=True)
@@ -41,6 +53,17 @@ class Customer(models.Model):
         managed = True
         db_table = 'Customer'
 
+    @property
+    def contact(self):
+        if self.contact_no == None:
+            return ""
+        return self.contact_no
+
+    @contact.setter
+    def contact(self, contact):
+        if contact == None or len(contact) == 0:
+            self.contact_no = None
+        self.contact_no = contact
 
 class Project(models.Model):
     id = models.AutoField(primary_key=True)

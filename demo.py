@@ -1,10 +1,6 @@
-# from datetime import datetime
+from datetime import datetime
 from datetime import date
-# print(datetime.today())
-print(dir(date))
-print(date.today() < date(2021,6,17))
-def func(fname,lname):
-    print(fname,lname)
+from datetime import time
 
-def some():
-    pass
+for i in range(11):
+    print(i, end = " ")

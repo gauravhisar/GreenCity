@@ -35,11 +35,11 @@ class PlotViewSet(viewsets.ModelViewSet):
     # queryset = Plot.objects.all()  # this queryset will be seen in the view
     serializer_classes = {
         'retrieve': serializers.PlotDetailSerializer,
+        'update': serializers.PlotDetailSerializer,
+        'partial_update': serializers.PlotDetailSerializer,
         'list': serializers.PlotSerializer,
         'create': serializers.PlotSerializer,
         'delete': serializers.PlotSerializer,
-        'update': serializers.PlotSerializer,
-        'partial_update': serializers.PlotSerializer,
     }
 
     def get_serializer_class(self):
