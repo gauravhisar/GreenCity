@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Sum
+from django.utils.functional import cached_property
 from datetime import date
 import logging
 from Home.models import Project, Plot, Customer, Dealer, Deal,Payment,Due,CommissionPayment
@@ -32,14 +33,33 @@ class DealerSerializer(serializers.ModelSerializer):
 class DealSerializer(serializers.ModelSerializer): 
     "Serializer for both Detail and List Views  "
     plot_id = serializers.PrimaryKeyRelatedField(queryset = Plot.objects.all(),source = "plot")
+
+    # write_only fields
     customer_id = serializers.PrimaryKeyRelatedField(queryset = Customer.objects.all(),write_only = True, source = "customer")
     dealer_id = serializers.PrimaryKeyRelatedField(queryset = Dealer.objects.all(),write_only = True, source = "dealer")
+    
+    # read_only fields
     customer = CustomerSerializer(read_only = True)
     dealer = DealerSerializer(read_only = True)
-    
+    balance = serializers.FloatField(read_only = True)
+    penalty = serializers.FloatField(read_only = True)
+    total_rebate = serializers.FloatField(read_only = True)
+    total_amount_paid = serializers.FloatField(read_only = True)
+    total_interest_given = serializers.FloatField(read_only = True)
+
     class Meta:
         model = Deal
-        fields = ('id','plot_id','customer_id','dealer_id','customer','balance','penalty','dealer')
+        fields = ('id','plot_id','customer_id','dealer_id','customer','balance','total_rebate','total_interest_given','total_amount_paid','penalty','dealer')
+    
+    def to_representation(self, instance):
+        agg = instance.get_aggregates
+        instance.balance = agg['balance']
+        instance.penalty = agg['penalty']
+        instance.total_rebate = agg['total_rebate']
+        instance.total_interest_given = agg['total_interest_given']
+        instance.total_amount_paid = agg['total_amount_paid']
+        return super().to_representation(instance)
+        
 
     # def get_plot_id(self,data)
     def __str__(self):
@@ -114,17 +134,15 @@ class CommissionPaymentSerializer(serializers.ModelSerializer):
 
 
 
-class DealDetailSerializer(serializers.ModelSerializer):
-    dealer = DealerSerializer(read_only = True)
-    customer = CustomerSerializer(read_only = True)
+class DealDetailSerializer(DealSerializer):
     payments = PaymentSerializer(many = True,read_only = True)
     commission_payments = CommissionPaymentSerializer(many=True,read_only = True)
     dues = DueSerializer(many=True,read_only = True)
 
+
     class Meta:
         model = Deal
-        fields = ('id', 'plot_id', 'customer', 'dues','payments','penalty','dealer', 'commission_payments',
-                   'balance')
+        exclude = ['plot']
     
     def __str__(self):
         return 'Deal on PlotNo: ' + str(self.plot.plot_no) + 'of Project:' + str(self.plot.project.name)

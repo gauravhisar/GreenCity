@@ -6,8 +6,9 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
-from datetime import date
+from django.utils.functional import cached_property
 from django.db.models import Manager,Sum,Count
+from datetime import date
 import logging
 
 
@@ -133,36 +134,28 @@ class Deal(models.Model):
     def __str__(self):
         return self.plot.plot_no + " (" + self.plot.project.name + ")"
 
-    @property
-    def balance(self):
-        plotamount = self.plot.rate*self.plot.area
-        payments = self.payments.all()  # reverse accessing of related data
-        totalrebate = sum([x.rebate for x in payments])
-        totalinterestgiven = sum([x.interest_given for x in payments])
-        totalamountpaid = sum([x.net_amount_paid for x in payments])
-        return plotamount - (totalamountpaid + totalrebate + totalinterestgiven)
+    @cached_property
+    def get_aggregates(self):
+        agg = self.payments.all().aggregate(total_amount_paid=Sum('net_amount_paid'),total_rebate=Sum('rebate'),total_interest_given=Sum('interest_given'))
+        agg['total_amount_paid'] = agg.get('total_amount_paid') or 0
+        agg['total_rebate'] = agg.get('total_rebate') or 0
+        agg['total_interest_given'] = agg.get('total_interest_given') or 0
+        # if not agg['total_amount_paid']:
+        #     agg['total_amount_paid'] = 0
+        # if not agg['total_rebate']:
+        #     agg['total_rebate'] = 0
+        # if not agg['total_interest_given']:
+        #     agg['total_interest_given'] = 0
 
-    @property
-    def penalty(self):
-        # payments = Payment.objects.filter(deal__id = self.id)
-        payments = self.payments.all()
-        totalrebate = sum([x.rebate for x in payments])
-        totalinterestgiven = sum([x.interest_given for x in payments])
-        totalamountpaid = sum([x.net_amount_paid for x in payments])
-        # dues = Due.objects.filter(deal__id =self.id)
-        dues = self.dues.all()
-        due_amount_upto_today = 0
-        for x in dues:
-            if x.due_date > date.today():
-                break
-            due_amount_upto_today+= x.payable_amount
-
-        if due_amount_upto_today > totalamountpaid + totalinterestgiven + totalrebate:
-            return True  # yes penalty will be applied
-        else:
-            return False # no penalty
-
-
+        agg['total_amount_covered'] = sum(agg.values())
+        agg['balance'] = self.plot.amount - agg['total_amount_covered']
+        agg = agg | self.dues.filter(due_date__gt = date.today()).aggregate(dues_upto_today = Sum('payable_amount'))
+        if not agg['dues_upto_today']:
+            agg['dues_upto_today'] = 0
+        
+        agg['penalty'] = agg['dues_upto_today'] > agg['total_amount_covered']
+        return agg
+        
 
 class Due(models.Model):
     id = models.AutoField(primary_key=True)
@@ -177,6 +170,10 @@ class Due(models.Model):
     class Meta:
         managed = True
         db_table = 'Dues'
+
+    # @property
+    # def paid(self):
+    #     pass
 
 
 class Payment(models.Model):
@@ -212,18 +209,3 @@ class CommissionPayment(models.Model):  # give
         managed = True
         db_table = 'CommissionPayment'
         verbose_name = "Commission Payment"
-
-# # We can add some custom methods to Models
-
-# # Deal Model
-
-# @property
-# def balance(self):  # commission not added yet
-#         plotamount = self.plot.rate*self.plot.area
-#         payments = Payment.objects.filter(deal__id = self.id)
-#         totalrebate = sum([x.rebate for x in payments])
-#         totalinterestgiven = sum([x.interest_given for x in payments])
-#         totalamountpaid = sum([x.net_amount_paid for x in payments])
-#         return plotamount - (totalamountpaid + totalrebate + totalinterestgiven)
-
-# Deal.balance = balance
