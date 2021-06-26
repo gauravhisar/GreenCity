@@ -86,11 +86,31 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ('id','deal_id','date','interest_given','rebate','net_amount_paid')
 
+    def create(self, validated_data): # now there is no need for client to pass project_id in the request
+        payment = Payment(
+            deal_id = self.context['view'].kwargs.get('deal_id'),
+            date = validated_data.get('date'),
+            interest_given = validated_data.get('interest_given'),
+            rebate = validated_data.get('rebate'),
+            net_amount_paid = validated_data.get('net_amount_paid')
+        )
+        payment.save()
+        return payment
+
 
 class CommissionPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = CommissionPayment
         fields = ('id','deal_id','date','amount')
+
+    def create(self, validated_data): # now there is no need for client to pass project_id in the request
+        cp = CommissionPayment(
+            deal_id = self.context['view'].kwargs.get('deal_id'),
+            date = validated_data.get('date'),
+            amount = validated_data.get('amount')
+        )
+        cp.save()
+        return cp
 
 
 
