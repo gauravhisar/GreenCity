@@ -131,7 +131,8 @@ SIMPLE_JWT = {
 
 # CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "http://localhost:5000",
 ]
 # CORS_ORIGIN_WHITELIST =  list(map(lambda x: "http://" + x + ":3000",ALLOWED_HOSTS)) + list(map(lambda x: "http://" + x + ":5500",ALLOWED_HOSTS))
 # print(CORS_ORIGIN_WHITELIST)
