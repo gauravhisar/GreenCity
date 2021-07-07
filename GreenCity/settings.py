@@ -163,7 +163,7 @@ WSGI_APPLICATION = 'GreenCity.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'greencity.db',
+        'NAME': BASE_DIR / 'sqlite.db',
     }
 }
 
