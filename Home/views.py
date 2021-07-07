@@ -1,9 +1,8 @@
-from django.core.files.base import File
-from django.db.models import query
-from django.http import HttpResponse
+# from django.core.files.base import File
+# from django.db.models import query
+# from django.http import HttpResponse
 import logging
-
-from rest_framework import generics, viewsets, status
+from rest_framework import viewsets,permissions
 from rest_framework.response import Response
 from Home import serializers
 from Home.models import Project, Customer, Dealer, Plot, Deal,Payment,Due,CommissionPayment
@@ -16,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Project.objects.all()
     lookup_field = 'id'
     serializer_classes = {
@@ -33,6 +33,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 class PlotViewSet(viewsets.ModelViewSet):
     # queryset = Plot.objects.all()  # this queryset will be seen in the view
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_classes = {
         'retrieve': serializers.PlotDetailSerializer,
         'update': serializers.PlotDetailSerializer,
@@ -50,6 +51,7 @@ class PlotViewSet(viewsets.ModelViewSet):
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Customer.objects.all()
     serializer_classes = {
         'retrieve': serializers.CustomerDetailSerializer,
@@ -65,6 +67,7 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
 
 class DealerViewSet(viewsets.ModelViewSet):
+    # permission_classes = [permissions.IsAuthenticated]
     queryset = Dealer.objects.all()
     serializer_classes = {
         'retrieve': serializers.DealerDetailSerializer,
@@ -80,6 +83,7 @@ class DealerViewSet(viewsets.ModelViewSet):
 
 
 class DealViewSet(viewsets.ModelViewSet):
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_classes = {
         'retrieve': serializers.DealDetailSerializer,
         'list': serializers.DealSerializer,
@@ -95,6 +99,7 @@ class DealViewSet(viewsets.ModelViewSet):
         return Deal.objects.filter(plot__project_id = self.kwargs['project_id'])
 
 class DueViewSet(viewsets.ModelViewSet):
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_class = serializers.DueSerializer
 
     def get_queryset(self):
@@ -103,6 +108,7 @@ class DueViewSet(viewsets.ModelViewSet):
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_class = serializers.PaymentSerializer
 
     def get_queryset(self):
@@ -110,6 +116,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
 
 
 class CommissionPaymentViewSet(viewsets.ModelViewSet):
+    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_class = serializers.CommissionPaymentSerializer
 
     def get_queryset(self):
