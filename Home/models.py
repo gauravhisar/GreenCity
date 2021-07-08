@@ -12,8 +12,8 @@ from datetime import date, timedelta
 import logging
 ['']
 
-logger = logging.getLogger(__name__)
-logger.info(__name__)
+# logger = logging.getLogger(__name__)
+# logger.info(__name__)
 
 class Dealer(models.Model):
     id = models.AutoField(primary_key=True)

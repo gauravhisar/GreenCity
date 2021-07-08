@@ -8,8 +8,8 @@ from rest_framework.fields import DictField
 from Home.models import Project, Plot, Customer, Dealer, Deal,Payment,Due,CommissionPayment
 
 
-logger = logging.getLogger(__name__)
-logger.info(__name__)
+# logger = logging.getLogger(__name__)
+# logger.info(__name__)
 
 
 class ProjectSerializer(serializers.ModelSerializer):  # used by list view only

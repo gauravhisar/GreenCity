@@ -11,7 +11,7 @@ from Home.models import Project, Customer, Dealer, Plot, Deal,Payment,Due,Commis
 
 
 # Get an instance of a logger
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
