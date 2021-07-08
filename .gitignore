@@ -6,3 +6,5 @@ demo.js
 greencity.db
 sqlite.db
 /AuxDirectory
+/.vscode
+/__pycache__
