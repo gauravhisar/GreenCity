@@ -19,14 +19,14 @@ class ProjectSerializer(serializers.ModelSerializer):  # used by list view only
 
 
 class CustomerSerializer(serializers.ModelSerializer):
-    contact_no = serializers.CharField(max_length=10, source = "contact", required = False, allow_null = True)
+    contact_no = serializers.CharField(max_length=10, source = "contact", required = False, allow_null = True, allow_blank = True)
     class Meta:
         model = Customer
         fields = ('id', 'name', 'contact_no', 'other_info')
 
 
 class DealerSerializer(serializers.ModelSerializer):
-    contact_no = serializers.CharField(max_length=10, source = "contact",required = False, allow_null = True)
+    contact_no = serializers.CharField(max_length=10, source = "contact",required = False, allow_null = True, allow_blank = True)
     class Meta:
         model = Dealer
         fields = ('id', 'name', 'contact_no', 'other_info')
@@ -201,7 +201,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
         return data
 
 
-class CustomerDetailSerializer(serializers.ModelSerializer):
+class CustomerDetailSerializer(CustomerSerializer):
     deal = DealSerializer(many=True, read_only=True)
 
     class Meta:
@@ -209,7 +209,7 @@ class CustomerDetailSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'contact_no', 'other_info', 'deal')
 
 
-class DealerDetailSerializer(serializers.ModelSerializer):
+class DealerDetailSerializer(DealerSerializer):
     deal = DealSerializer(many = True, read_only=True)
     
     class Meta:

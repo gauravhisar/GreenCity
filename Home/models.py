@@ -7,10 +7,10 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 from django.utils.functional import cached_property
-from django.db.models import Manager,Sum,Count
+from django.db.models import Sum,Count
 from datetime import date, timedelta 
-import logging
-['']
+# import logging
+# ['']
 
 # logger = logging.getLogger(__name__)
 # logger.info(__name__)
