@@ -37,8 +37,10 @@ class Dealer(models.Model):
     @contact.setter
     def contact(self, contact):
         if contact == None or len(contact) == 0:
+            # print(contact)
             self.contact_no = None
-        self.contact_no = contact
+        else: 
+            self.contact_no = contact
 
 
 class Customer(models.Model):
@@ -100,7 +102,7 @@ class Project(models.Model):
 
 class Plot(models.Model):
     id = models.AutoField(primary_key=True)
-    plot_no = models.TextField(unique=True, null=True)
+    plot_no = models.TextField(null=True)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_name='plots')
     area = models.FloatField(blank=True, null=True)
@@ -160,7 +162,6 @@ class Deal(models.Model):
         agg['next_due'] = Due()
         unpaid_dues_in_upcoming_30_days = []
         penalty = False            # penalty is True if a due date is crossed and still havent received the payment
-
         tday = date.today()
         sum_of_payable_amount = 0
 
@@ -175,7 +176,7 @@ class Deal(models.Model):
                 due.paid = due.payable_amount - (sum_of_payable_amount - total_amount_covered)
                 unpaid_dues.append(due)
                 agg['next_due'] = due
-                if due.due_date < tday:
+                if due.due_date <= tday:
                     unpaid_dues_in_upcoming_30_days.append(due) 
                     penalty = True
                 break
@@ -213,9 +214,12 @@ class Due(models.Model):
     deal = models.ForeignKey(
         Deal, on_delete=models.CASCADE, related_name='dues')
     due_date = models.DateField(blank=True, null=True)
-    payable_amount = models.FloatField(blank=True, null=True)
-    
+    payable_amount_percentage = models.DecimalField(blank=True, null=True, decimal_places=2, max_digits = 5)
 
+    @property
+    def payable_amount(self):
+        return (self.deal.plot.amount)*float(self.payable_amount_percentage)/100
+    
     def __str__(self):
         return self.deal.plot.plot_no + " (" + self.deal.plot.project.name + ") -- " + str(self.id)
 

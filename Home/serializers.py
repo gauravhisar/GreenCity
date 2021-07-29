@@ -1,8 +1,7 @@
 from rest_framework import serializers
 from django.db.models import Sum
-from django.utils.functional import cached_property
 from datetime import date
-import logging
+# import logging
 
 from rest_framework.fields import DictField
 from Home.models import Project, Plot, Customer, Dealer, Deal,Payment,Due,CommissionPayment
@@ -39,18 +38,22 @@ class DealerSerializer(serializers.ModelSerializer):
 class DueSerializer(serializers.ModelSerializer):
     paid = serializers.FloatField(read_only = True)
     due_date = serializers.DateField(input_formats = ["%d-%m-%Y", 'iso-8601'])
+    payable_amount_percentage = serializers.FloatField()
     class Meta:
         model = Due
-        fields = ('id','deal_id','due_date','payable_amount', 'paid')
-    
+        fields = ['id','deal_id','due_date','payable_amount_percentage','payable_amount', 'paid'] # + [amount]
+        read_only_fields = ['payable_amount']
+
     def create(self, validated_data): # now there is no need for client to pass project_id in the request
         due = Due(
             deal_id = self.context['view'].kwargs.get('deal_id'),
             due_date = validated_data.get('due_date'),
             payable_amount = validated_data.get('payable_amount')
+            # amount = validated_data.get('amount')
         )
         due.save()
         return due
+    
 
 class PaymentSerializer(serializers.ModelSerializer):
     ''''''
@@ -190,7 +193,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id', 'name', 'address',
-                  'total_plots', 'total_area', 'plots_sold','area_sold', 'plots_left', 'area_left','plots')
+                  'total_plots', 'total_area','plots')
 
     def to_representation(self, instance):
         data =  super().to_representation(instance)
