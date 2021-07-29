@@ -1,2 +1,2 @@
-# GreenCity
-A plot management system which manages different lands/plots in an area named GreenCity.
+# Rudra Estate
+A plot management system which manages different lands/plots of a Project.
