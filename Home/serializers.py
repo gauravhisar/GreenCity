@@ -44,15 +44,51 @@ class DueSerializer(serializers.ModelSerializer):
         fields = ['id','deal_id','due_date','payable_amount_percentage','payable_amount', 'paid'] # + [amount]
         read_only_fields = ['payable_amount']
 
-    def create(self, validated_data): # now there is no need for client to pass project_id in the request
+    def create(self,validated_data): # now there is no need for client to pass project_id in the request
         due = Due(
             deal_id = self.context['view'].kwargs.get('deal_id'),
             due_date = validated_data.get('due_date'),
-            payable_amount = validated_data.get('payable_amount')
+            payable_amount_percentage = validated_data.get('payable_amount_percentage')
             # amount = validated_data.get('amount')
         )
+
+        dues = list(due.deal.dues.all()) # dues is orderec by date
+        last_due = dues.pop()
+        percentage_sum = sum([float(dues[i].payable_amount_percentage) for i in range(len(dues))]) + float(due.payable_amount_percentage)
+        if percentage_sum > 100:
+            raise serializers.ValidationError("Dues Percentage Cannot be greater than 100")
         due.save()
+
+        last_due.due_date = due.due_date
+        if len(dues) and due.due_date < dues[-1].due_date:
+            last_due.due_date = dues[-1].due_date
+        last_due.payable_amount_percentage = 100 - percentage_sum
+        last_due.save()
+
         return due
+
+    def update(self,instance, validated_data): # now there is no need for client to pass project_id in the request
+        dues = list(instance.deal.dues.all()) # dues is orderec by date
+        last_due = dues.pop()
+        if last_due.id == instance.id:
+            last_due.due_date = validated_data.get('due_date')
+            last_due.save()
+            return last_due
+
+        percentage_sum = sum([float(dues[i].payable_amount_percentage) for i in range(len(dues))]) + float(validated_data.get('payable_amount_percentage', 0)) - float(instance.payable_amount_percentage)
+        if percentage_sum > 100:
+            raise serializers.ValidationError("Dues Percentage Cannot be greater than 100")
+        
+        instance.due_date = validated_data.get('due_date', None)
+        instance.payable_amount_percentage = validated_data.get('payable_amount_percentage', None)
+        instance.save()
+
+        last_due.due_date = instance.due_date
+        if len(dues) and instance.due_date < dues[-1].due_date:
+            last_due.due_date = dues[-1].due_date
+        last_due.payable_amount_percentage = 100 - percentage_sum
+        last_due.save()
+        return instance
     
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -118,6 +154,11 @@ class DealSerializer(serializers.ModelSerializer):
         model = Deal
         exclude = ['plot']
 
+    def create(self, validated_data):
+        deal = Deal(**validated_data)
+        deal.save()
+        Due(deal_id = deal.id, due_date = date.today(), payable_amount_percentage = 100).save()
+        return deal
     def to_representation(self, instance):
         agg = instance.get_aggregates
         instance.balance = agg['balance']
@@ -136,6 +177,7 @@ class DealSerializer(serializers.ModelSerializer):
         #     data['next_due'] = None
         # data['next_due']['paid'] = agg['next_due'].paid
         return data
+
         
 
     # def get_plot_id(self,data)
@@ -218,6 +260,22 @@ class DealerDetailSerializer(DealerSerializer):
     class Meta:
         model = Dealer
         fields = ('id', 'name', 'contact_no', 'other_info', 'deal')
+class PaymentDetailSerializer(PaymentSerializer):
+    deal = DealSerializer(read_only = True)
+    class Meta:
+        model = Payment
+        fields = ('id','deal_id','date','interest_given','rebate','net_amount_paid', 'deal')
+class CommissionPaymentDetailSerializer(CommissionPaymentSerializer):
+    deal = DealSerializer(read_only = True)
+    class Meta:
+        model = CommissionPayment
+        fields = ('id','deal_id','date','amount', 'deal')
+class DueDetailSerializer(DueSerializer):
+    deal = DealSerializer(read_only = True)
+    class Meta:
+        model = Due
+        fields = ['id','deal_id','due_date','payable_amount_percentage','payable_amount', 'paid','deal']
+        read_only_fields = ['payable_amount']
 
 
 class DealsFileUploadSerializer(serializers.Serializer):

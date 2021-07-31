@@ -140,6 +140,12 @@ class Deal(models.Model):
     class Meta:
         managed = True
         db_table = 'Deal'
+
+    # @property
+    # def balance(self):
+    #     res = 0
+    #     for x in self.payments.all():
+    #         res += x.rebate + x.interest_given + 
         
 
     def __str__(self):
@@ -218,7 +224,7 @@ class Due(models.Model):
 
     @property
     def payable_amount(self):
-        return (self.deal.plot.amount)*float(self.payable_amount_percentage)/100
+        return int((self.deal.plot.amount)*float(self.payable_amount_percentage)/100)
     
     def __str__(self):
         return self.deal.plot.plot_no + " (" + self.deal.plot.project.name + ") -- " + str(self.id)
@@ -226,7 +232,7 @@ class Due(models.Model):
     class Meta:
         managed = True
         db_table = 'Dues'
-        ordering = ['due_date']
+        ordering = ['due_date', '-id']
 
 
 
@@ -240,6 +246,26 @@ class Payment(models.Model):
     net_amount_paid = models.FloatField(
         null=True, blank=True)  # net amount paid by customer
     # amount = models.FloatField(blank=True, null=True)  = rebate + interest_given + net_amount_paid
+
+    # @property
+    # def total_interest_given(self):
+    #     res = 0
+    #     for x in self.deal.payments:
+    #         res += x.interest_given
+    #     return res
+    # @property
+    # def total_rebate(self):
+    #     res = 0
+    #     for x in self.deal.payments:
+    #         res += x.rebate
+    #     return res
+    # @property
+    # def total_amount_paid(self):
+    #     res = 0
+    #     for x in self.deal.payments:
+    #         res += x.net_amount_paid
+    #     return res
+        
 
     def __str__(self):
         return str(self.deal.plot.plot_no) + " (" + self.deal.plot.project.name + ") -- " + str(self.id)
@@ -259,6 +285,13 @@ class CommissionPayment(models.Model):  # give
 
     def __str__(self):
         return self.dealer.name + self.id
+
+    # @property
+    # def total_commission(self):
+    #     res = 0
+    #     for x in self.deal.commission_payments:
+    #         res += x.amount
+    #     return res
 
     class Meta:
         managed = True

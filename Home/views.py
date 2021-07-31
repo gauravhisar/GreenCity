@@ -2,7 +2,7 @@
 # from django.db.models import query
 # from django.http import HttpResponse
 import logging
-from rest_framework import viewsets,permissions
+from rest_framework import viewsets,permissions,status
 from rest_framework.response import Response
 from Home import serializers
 from Home.models import Project, Customer, Dealer, Plot, Deal,Payment,Due,CommissionPayment
@@ -15,14 +15,13 @@ from Home.models import Project, Customer, Dealer, Plot, Deal,Payment,Due,Commis
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Project.objects.all()
     lookup_field = 'id'
     serializer_classes = {
         'retrieve': serializers.ProjectDetailSerializer,
         'list': serializers.ProjectSerializer,
         'create': serializers.ProjectSerializer,
-        'delete': serializers.ProjectSerializer,
+        'destroy': serializers.ProjectSerializer,
         'update': serializers.ProjectSerializer,
         'partial_update': serializers.ProjectSerializer,
     }
@@ -40,7 +39,7 @@ class PlotViewSet(viewsets.ModelViewSet):
         'partial_update': serializers.PlotDetailSerializer,
         'list': serializers.PlotSerializer,
         'create': serializers.PlotSerializer,
-        'delete': serializers.PlotSerializer,
+        'destroy': serializers.PlotSerializer,
     }
 
     def get_serializer_class(self):
@@ -51,13 +50,12 @@ class PlotViewSet(viewsets.ModelViewSet):
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Customer.objects.all()
     serializer_classes = {
         'retrieve': serializers.CustomerDetailSerializer,
         'list': serializers.CustomerSerializer,
         'create': serializers.CustomerSerializer,
-        'delete': serializers.CustomerSerializer,
+        'destroy': serializers.CustomerSerializer,
         'update': serializers.CustomerSerializer,
         'partial_update': serializers.CustomerSerializer,
     }
@@ -67,13 +65,12 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
 
 class DealerViewSet(viewsets.ModelViewSet):
-    # permission_classes = [permissions.IsAuthenticated]
     queryset = Dealer.objects.all()
     serializer_classes = {
         'retrieve': serializers.DealerDetailSerializer,
         'list': serializers.DealerSerializer,
         'create': serializers.DealerSerializer,
-        'delete': serializers.DealerSerializer,
+        'destroy': serializers.DealerSerializer,
         'update': serializers.DealerSerializer,
         'partial_update': serializers.DealerSerializer,
     }
@@ -83,12 +80,11 @@ class DealerViewSet(viewsets.ModelViewSet):
 
 
 class DealViewSet(viewsets.ModelViewSet):
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_classes = {
         'retrieve': serializers.DealDetailSerializer,
+        'create': serializers.DealDetailSerializer,
         'list': serializers.DealSerializer,
-        'create': serializers.DealSerializer,
-        'delete': serializers.DealSerializer,
+        'destroy': serializers.DealSerializer,
         'update': serializers.DealSerializer,
         'partial_update': serializers.DealSerializer,
     }
@@ -99,29 +95,88 @@ class DealViewSet(viewsets.ModelViewSet):
         return Deal.objects.filter(plot__project_id = self.kwargs['project_id'])
 
 class DueViewSet(viewsets.ModelViewSet):
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    serializer_class = serializers.DueSerializer
+    # serializer_class = serializers.DueSerializer
+    serializer_classes = {
+        'retrieve': serializers.DueSerializer,
+        'list': serializers.DueSerializer,
+        'destroy': serializers.DueDetailSerializer,
+        'create': serializers.DueDetailSerializer,
+        'update': serializers.DueDetailSerializer,
+        'partial_update': serializers.DueDetailSerializer,
+    }
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, serializers.DueSerializer)
 
     def get_queryset(self):
         return Due.objects.filter(deal_id = self.kwargs['deal_id'])
 
+    def destroy(self, request, *args, **kwargs):
+        dues = list(self.get_queryset()) # dues is orderec by date
+        last_due = dues.pop()
+        instance = self.get_object()
+        if last_due.id == instance.id:
+            return Response(data = "You cannot delete last Due", status = status.HTTP_400_BAD_REQUEST)
+        instance.delete()
+
+        percentage_sum = sum([float(dues[i].payable_amount_percentage) for i in range(len(dues))]) - float(instance.payable_amount_percentage)
+        if percentage_sum > 100:
+            return Response(data = "Dues Percentage Cannot be greater than 100", status = status.HTTP_400_BAD_REQUEST)
+        last_due.payable_amount_percentage = 100 - percentage_sum
+        if len(dues) > 1:
+            last_due.due_date = dues[-1].due_date if dues[-1].due_date != instance.due_date else dues[-2].due_date
+        last_due.save()
+        
+        serializer = serializers.DealSerializer(Deal.objects.get(id=kwargs['deal_id']))
+        return Response(data = {'deal':serializer.data}, status=status.HTTP_200_OK)
+
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    serializer_class = serializers.PaymentSerializer
+    # serializer_class = serializers.PaymentSerializer
+    serializer_classes = {
+        'retrieve': serializers.PaymentSerializer,
+        'list': serializers.PaymentSerializer,
+        'destroy': serializers.PaymentDetailSerializer,
+        'create': serializers.PaymentDetailSerializer,
+        'update': serializers.PaymentDetailSerializer,
+        'partial_update': serializers.PaymentDetailSerializer,
+    }
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, serializers.PaymentSerializer)
 
     def get_queryset(self):
         return Payment.objects.filter(deal_id = self.kwargs['deal_id'])
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        serializer = serializers.DealSerializer(Deal.objects.get(id=kwargs['deal_id']))
+        return Response(data = {'deal':serializer.data}, status=status.HTTP_200_OK)
+        # return super().destroy(request, *args, **kwargs)
+
 
 class CommissionPaymentViewSet(viewsets.ModelViewSet):
-    # permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     serializer_class = serializers.CommissionPaymentSerializer
+    serializer_classes = {
+        'retrieve': serializers.CommissionPaymentSerializer,
+        'list': serializers.CommissionPaymentSerializer,
+        'destroy': serializers.CommissionPaymentDetailSerializer,
+        'create': serializers.CommissionPaymentDetailSerializer,
+        'update': serializers.CommissionPaymentDetailSerializer,
+        'partial_update': serializers.CommissionPaymentDetailSerializer,
+    }
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, serializers.CommissionPaymentSerializer)
 
     def get_queryset(self):
         return CommissionPayment.objects.filter(deal_id = self.kwargs['deal_id'])
 
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        serializer = serializers.DealSerializer(Deal.objects.get(id=kwargs['deal_id']))
+        return Response(data = {'deal':serializer.data}, status=status.HTTP_200_OK)
 
 class DealsFileUploadViewSet(viewsets.ViewSet):
     # parser_classes = [parsers.FileUploadParser]
