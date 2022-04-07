@@ -171,7 +171,7 @@ class CommissionPaymentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return CommissionPayment.objects.filter(deal_id = self.kwargs['deal_id'])
 
-    
+    # return whole deal data after deletion of Commission
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.delete()
@@ -194,5 +194,5 @@ class DealsFileUploadViewSet(viewsets.ViewSet):
             s.close()
 
         r = "POST API and you have uploaded a {} file".format(content_type)
-        print("I got the file bitch")
+        print("I got the file!")
         return Response(r)

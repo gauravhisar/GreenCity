@@ -1,0 +1,7 @@
+__pycache__
+djangoenvv
+djangoenv
+package-lock.json
+package.json
+build
+node_modules

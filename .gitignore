@@ -1,4 +1,6 @@
 djangoenv
+env
+djangoenvv
 demo.py
 greencity.log
 new.pdf
@@ -8,3 +10,7 @@ sqlite.db
 /AuxDirectory
 /.vscode
 __pycache__
+node_modules
+package.json
+package-lock.json
+.idea
