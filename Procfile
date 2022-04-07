@@ -1,1 +1,1 @@
-web: gunicorn GreenCity.wsgi --log-file
+web: gunicorn GreenCity.wsgi --log-file -
