@@ -131,6 +131,7 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5000",
+    "https://624f033c33d7e70d24f39962--mellifluous-cocada-de1c33.netlify.app/",
 ]
 # CORS_ORIGIN_WHITELIST =  list(map(lambda x: "http://" + x + ":3000",ALLOWED_HOSTS)) + list(map(lambda x: "http://" + x + ":5500",ALLOWED_HOSTS))
 # print(CORS_ORIGIN_WHITELIST)
