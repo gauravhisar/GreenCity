@@ -9,4 +9,5 @@ RUN pip install -r requirements.txt
 RUN pip uninstall -y PyJWT
 RUN pip install PyJWT
 # RUN python manage.py migrate
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["gunicorn", "GreenCity.wsgi", "--log-file", "-"]
