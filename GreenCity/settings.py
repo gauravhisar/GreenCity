@@ -132,7 +132,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5000",
     "https://mellifluous-cocada-de1c33.netlify.app",
-    "https://624f3b06cfca7452cf351a2b--mellifluous-cocada-de1c33.netlify.app"
+    "https://624f3b06cfca7452cf351a2b--mellifluous-cocada-de1c33.netlify.app",
+    "https://625041d99973310a1e4bd4da--mellifluous-cocada-de1c33.netlify.app",
 ]
 # CORS_ORIGIN_WHITELIST =  list(map(lambda x: "http://" + x + ":3000",ALLOWED_HOSTS)) + list(map(lambda x: "http://" + x + ":5500",ALLOWED_HOSTS))
 # print(CORS_ORIGIN_WHITELIST)
